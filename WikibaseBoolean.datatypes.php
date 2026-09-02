@@ -30,14 +30,20 @@
  * it directly rather than wrapping it, so 'value-type' below is 'boolean'
  * and every callback deals in `DataValues\BooleanValue` instances.
  *
- * OPEN QUESTION for implementation time (deliberately not resolved by this
- * scaffold): whether Wikibase's DataValueFactory / DataValueDeserializer
- * needs an explicit registration to turn a stored
- * {"type":"boolean","value":true} blob back into a `DataValues\BooleanValue`
- * on load, or whether that is derived automatically from 'value-type'
- * strings already present in the merged registry. Check this against the
- * actual vendored DataValueFactory source before implementing real logic --
- * don't assume either way.
+ * RESOLVED -- deserialization DOES need an explicit registration:
+ * confirmed against `vendor/data-values/data-values/src/BooleanValue.php`
+ * on a real Wikibase install (its deprecated `newFromArray()` docblock
+ * points at "DataValue builder callbacks in {@see DataValueDeserializer}"
+ * as the non-deprecated replacement), and against Wikibase's own
+ * ADR-0024 ("Data type specific value deserialization"), which added a
+ * `'deserializer-builder'` field to this exact definitions array for
+ * this exact purpose (originally for the entity-schema data type, whose
+ * shipped hook handler registers it as a plain class-string:
+ * `'deserializer-builder' => EntitySchemaValue::class`). We follow that
+ * precedent below -- a stored {"type":"boolean","value":true} blob would
+ * NOT deserialize back into a `DataValues\BooleanValue` without this,
+ * since Wikibase core has never registered a 'boolean' value type (see
+ * the VT:boolean note above) and so has no default deserializer for it.
  *
  * @note This is bootstrap code, executed on every request. Avoid
  * instantiating heavy objects here -- only return callbacks.
@@ -58,6 +64,15 @@ return [
 		// this points at the upstream DataValues\BooleanValue, not a
 		// WikibaseBoolean-owned class.
 		'value-type' => 'boolean',
+
+		// Tells Wikibase's DataValueDeserializer how to turn a stored
+		// {"type":"boolean","value":true} blob back into a real
+		// DataValues\BooleanValue on load -- see the RESOLVED note above.
+		// A plain class-string is sufficient (mirroring EntitySchema's own
+		// registration) because BooleanValue's constructor accepts exactly
+		// the raw value the deserializer already has in hand (a native
+		// bool, once json_decode has done its job).
+		'deserializer-builder' => \DataValues\BooleanValue::class,
 
 		// Factory for the parser that turns raw user input (e.g. a checkbox
 		// state, or typed text like "true"/"yes") into a
