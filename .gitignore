@@ -1,0 +1,31 @@
+# --- Dependencies -----------------------------------------------------
+# Installed via `composer install`. Not committed: consumers (including
+# a MediaWiki instance loading this extension) are expected to run
+# composer themselves, same convention as Wikibase core and its sibling
+# extensions (WikibaseLexeme, WikibaseMediaInfo, ...).
+/vendor/
+/node_modules/
+
+# --- Test / QA tooling output ------------------------------------------
+/.phpunit.result.cache
+/.phpunit.cache/
+/coverage/
+/.phan/
+
+# --- IDE / editor ------------------------------------------------------
+/.idea/
+/.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# --- OS noise ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# --- Logs ---------------------------------------------------------------
+*.log
+
+# --- Local dev configuration ---------------------------------------------
+# In case this extension is ever developed inside a MediaWiki checkout
+# rather than a standalone clone.
+/LocalSettings.php

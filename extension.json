@@ -1,0 +1,36 @@
+{
+	"name": "WikibaseBoolean",
+	"author": [
+		"Luca Mauri"
+	],
+	"url": "https://github.com/lucamauri/WikibaseBoolean",
+	"descriptionmsg": "wikibaseboolean-desc",
+	"license-name": "GPL-2.0-or-later",
+	"type": "wikibase",
+	"requires": {
+		"MediaWiki": ">= 1.43.0",
+		"extensions": {
+			"WikibaseRepository": "*"
+		}
+	},
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\WikibaseBoolean\\": "src/"
+	},
+	"TestAutoloadNamespaces": {
+		"MediaWiki\\Extension\\WikibaseBoolean\\Tests\\": "tests/phpunit/"
+	},
+	"HookHandlers": {
+		"main": {
+			"class": "MediaWiki\\Extension\\WikibaseBoolean\\Hooks"
+		}
+	},
+	"Hooks": {
+		"WikibaseRepoDataTypes": "main"
+	},
+	"MessagesDirs": {
+		"WikibaseBoolean": [
+			"i18n"
+		]
+	},
+	"manifest_version": 2
+}

@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Luca Mauri"
+		]
+	},
+	"wikibaseboolean-desc": "Adds a native 2-state Boolean datatype to Wikibase, for standalone Wikibase installs",
+	"wikibaseboolean-datatype-label": "Boolean"
+}

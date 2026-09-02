@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Luca Mauri"
+		]
+	},
+	"wikibaseboolean-desc": "{{desc|name=WikibaseBoolean|url=https://github.com/lucamauri/WikibaseBoolean}}",
+	"wikibaseboolean-datatype-label": "Label shown for the WikibaseBoolean property data type wherever Wikibase lists available data types: the property-creation form, the data type selector, and statement/snak display. Keep this short (it competes for space with other data type names like \"String\" or \"Item\")."
+}
