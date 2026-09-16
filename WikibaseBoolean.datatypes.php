@@ -52,6 +52,7 @@
  */
 
 use MediaWiki\Extension\WikibaseBoolean\Formatters\BooleanFormatter;
+use MediaWiki\Extension\WikibaseBoolean\Formatters\MediaWikiBooleanMessageLookup;
 use MediaWiki\Extension\WikibaseBoolean\Parsers\BooleanParser;
 use MediaWiki\Extension\WikibaseBoolean\Rdf\BooleanRdfMapper;
 use MediaWiki\Extension\WikibaseBoolean\Validators\BooleanValidator;
@@ -84,11 +85,19 @@ return [
 		},
 
 		// Factory for the formatter that turns a DataValues\BooleanValue
-		// into a display representation (plain, HTML, wikitext -- see
-		// BooleanFormatter's docblock for the format-switching contract
-		// this still needs to implement).
+		// into a display representation (plain text, HTML with a glyph
+		// prefix, or wikitext -- see BooleanFormatter's own docblock for
+		// exactly which format gets which treatment).
+		//
+		// MediaWikiBooleanMessageLookup is constructed here, at the one
+		// point where WikibaseBoolean is definitely running inside a real
+		// MediaWiki request, and handed to BooleanFormatter rather than
+		// letting BooleanFormatter call wfMessage() itself. This is what
+		// keeps BooleanFormatter (and BooleanFormatterTest) testable with
+		// plain PHPUnit -- see BooleanMessageLookup's own docblock for the
+		// full rationale.
 		'formatter-factory-callback' => static function ( $format ) {
-			return new BooleanFormatter( $format );
+			return new BooleanFormatter( $format, new MediaWikiBooleanMessageLookup() );
 		},
 
 		// Factory for constraint validation beyond what the parser already

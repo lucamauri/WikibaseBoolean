@@ -5,5 +5,7 @@
 		]
 	},
 	"wikibaseboolean-desc": "{{desc|name=WikibaseBoolean|url=https://github.com/lucamauri/WikibaseBoolean}}",
-	"wikibaseboolean-datatype-label": "Label shown for the WikibaseBoolean property data type wherever Wikibase lists available data types: the property-creation form, the data type selector, and statement/snak display. Keep this short (it competes for space with other data type names like \"String\" or \"Item\")."
+	"wikibaseboolean-datatype-label": "Label shown for the WikibaseBoolean property data type wherever Wikibase lists available data types: the property-creation form, the data type selector, and statement/snak display. Keep this short (it competes for space with other data type names like \"String\" or \"Item\").",
+	"wikibaseboolean-value-true": "Text shown for a PT:boolean value that is true, wherever Wikibase displays statement/snak values (plain text, HTML, and wikitext output). A wiki operator may override this on-wiki (e.g. to \"Canon\" for a fiction-wiki-specific property) via MediaWiki:Wikibaseboolean-value-true.",
+	"wikibaseboolean-value-false": "Text shown for a PT:boolean value that is false. See wikibaseboolean-value-true for the sibling message and override mechanism."
 }
