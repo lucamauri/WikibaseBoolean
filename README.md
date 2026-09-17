@@ -14,9 +14,29 @@ two-state flags that don't need item-level richness.
 
 ## Status
 
-Early scaffold. Architecture and interfaces are stubbed out and documented;
-no boolean logic is implemented yet. See `HANDOFF.md` for the current state
-and open decisions.
+All four datatype components are implemented and tested:
+
+- **Parser** (`BooleanParser`) -- raw input (checkbox state, or typed
+  text like `true`/`yes`/`1`) to `DataValues\BooleanValue`.
+- **Formatter** (`BooleanFormatter`) -- localized, format-aware display
+  (plain, wikitext, HTML with a ✓/✗ glyph, HTML diff), via a
+  `BooleanMessageLookup` abstraction so it's testable without a running
+  MediaWiki instance.
+- **Validator** (`BooleanValidator`) -- deliberately thin, per this
+  project's 2-state scope decision: the only real failure mode is a
+  mismatched registration handing it something other than a
+  `BooleanValue`.
+- **RDF mapper** (`BooleanRdfMapper`) -- maps to a plain `xsd:boolean`
+  literal for the Wikibase Query Service.
+
+`BooleanParser`, `BooleanFormatter`, and `BooleanValidator` run under
+plain `composer test`. `BooleanRdfMapper` and the `Hooks` registration
+class depend on Wikibase-internal interfaces and can only be
+meaningfully tested inside a real MediaWiki + Wikibase installation
+(see `phpunit.xml.dist`'s own header comment).
+
+See `manuals/adr/` for the architecture decisions behind these
+components and why they're shaped the way they are.
 
 ## Scope
 

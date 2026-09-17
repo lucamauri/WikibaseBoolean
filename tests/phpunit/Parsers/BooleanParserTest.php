@@ -36,7 +36,7 @@ class BooleanParserTest extends TestCase {
 		$this->assertTrue( $result->getValue() );
 	}
 
-	public function trueValueProvider(): array {
+	public static function trueValueProvider(): array {
 		return [
 			'native true' => [ true ],
 			'string "true"' => [ 'true' ],
@@ -59,7 +59,7 @@ class BooleanParserTest extends TestCase {
 		$this->assertFalse( $result->getValue() );
 	}
 
-	public function falseValueProvider(): array {
+	public static function falseValueProvider(): array {
 		return [
 			'native false' => [ false ],
 			'string "false"' => [ 'false' ],
@@ -81,7 +81,7 @@ class BooleanParserTest extends TestCase {
 		( new BooleanParser() )->parse( $rawValue );
 	}
 
-	public function unparseableValueProvider(): array {
+	public static function unparseableValueProvider(): array {
 		return [
 			'garbage string' => [ 'maybe' ],
 			'numeric string other than 0/1' => [ '2' ],

@@ -4,25 +4,26 @@ declare( strict_types = 1 );
 
 namespace MediaWiki\Extension\WikibaseBoolean\Tests\Rdf;
 
+use DataValues\BooleanValue;
+use MediaWiki\Extension\WikibaseBoolean\Rdf\BooleanRdfMapper;
 use PHPUnit\Framework\TestCase;
+use Wikibase\DataModel\Entity\PropertyId;
+use Wikibase\DataModel\Snak\PropertyValueSnak;
+use Wikibase\Repo\Rdf\ValueSnakRdfBuilder;
+use Wikimedia\Purtle\RdfWriter;
 
 /**
  * @covers \MediaWiki\Extension\WikibaseBoolean\Rdf\BooleanRdfMapper
  *
- * Skeleton only, with an important caveat unique to this test (see
- * phpunit.xml.dist's top comment for the full explanation): unlike the
- * Parser/Formatter/Validator stubs, BooleanRdfMapper implements
- * Wikibase\Repo\Rdf\ValueSnakRdfBuilder -- an interface that lives inside
- * the Wikibase MediaWiki extension itself, not a standalone Composer
- * package. Merely loading the BooleanRdfMapper class file requires that
- * interface to already be autoloadable, which is only true inside a real
- * MediaWiki + Wikibase installation. Running this suite via plain
- * `composer test` outside such an environment will hit the guard below
- * and skip, rather than fatally erroring on class load.
- *
- * Once real logic exists, this test should be run via MediaWiki core's
- * own tests/phpunit/phpunit.php against an installation with
- * WikibaseRepository loaded, not via this standalone phpunit.xml.dist.
+ * Unlike HooksTest, this suite mocks RdfWriter directly against the real,
+ * confirmed interface (vendor/wikimedia/purtle/src/RdfWriter.php) rather
+ * than skip-guarding entirely -- but it still can't run under plain
+ * `composer test`/phpunit.xml.dist, because merely loading
+ * BooleanRdfMapper (and this test's own use of PropertyValueSnak/
+ * PropertyId) requires Wikibase\Repo\Rdf\ValueSnakRdfBuilder and
+ * Wikibase\DataModel\... to be autoloadable, which only holds inside a
+ * real MediaWiki + Wikibase installation. See phpunit.xml.dist's own
+ * header comment. Run via MediaWiki core's tests/phpunit/phpunit.php.
  *
  * @license GPL-2.0-or-later
  */
@@ -41,9 +42,44 @@ class BooleanRdfMapperTest extends TestCase {
 	}
 
 	public function testImplementsValueSnakRdfBuilder(): void {
-		$mapper = new \MediaWiki\Extension\WikibaseBoolean\Rdf\BooleanRdfMapper();
+		$mapper = new BooleanRdfMapper();
 
-		$this->assertInstanceOf( \Wikibase\Repo\Rdf\ValueSnakRdfBuilder::class, $mapper );
+		$this->assertInstanceOf( ValueSnakRdfBuilder::class, $mapper );
+	}
+
+	/**
+	 * @dataProvider booleanValueProvider
+	 *
+	 * Confirms addValue() writes a plain xsd:boolean literal via
+	 * say()->value(), using the explicit 'true'/'false' lexical strings
+	 * documented on BooleanRdfMapper -- never PHP's (string) cast of a
+	 * bool, which would silently produce "1"/"" instead. $writer->say()
+	 * and ->value() both return RdfWriter $this per the confirmed
+	 * interface, so the mock chains via willReturnSelf().
+	 */
+	public function testAddValueWritesPlainXsdBooleanLiteral( bool $rawValue, string $expectedLexicalValue ): void {
+		$writer = $this->createMock( RdfWriter::class );
+
+		$writer->expects( $this->once() )
+			->method( 'say' )
+			->with( 'wdt', 'P1' )
+			->willReturnSelf();
+
+		$writer->expects( $this->once() )
+			->method( 'value' )
+			->with( $expectedLexicalValue, 'xsd', 'boolean' )
+			->willReturnSelf();
+
+		$snak = new PropertyValueSnak( new PropertyId( 'P1' ), new BooleanValue( $rawValue ) );
+
+		( new BooleanRdfMapper() )->addValue( $writer, 'wdt', 'P1', 'boolean', 'wdv', $snak );
+	}
+
+	public static function booleanValueProvider(): array {
+		return [
+			'true becomes the literal string "true", never "1"' => [ true, 'true' ],
+			'false becomes the literal string "false", never ""' => [ false, 'false' ],
+		];
 	}
 
 }

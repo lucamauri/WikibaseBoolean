@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de13c4255d905c7421e04689addac670",
+    "content-hash": "d3f7d8d9e398868a1c4e87fa1a8518ad",
     "packages": [
         {
             "name": "data-values/data-values",

@@ -49,7 +49,7 @@ class BooleanFormatterTest extends TestCase {
 		$this->assertSame( $expectedText, $formatter->format( new BooleanValue( $rawValue ) ) );
 	}
 
-	public function plainAndWikiFormatProvider(): array {
+	public static function plainAndWikiFormatProvider(): array {
 		return [
 			'plain, true' => [ BooleanFormatter::FORMAT_PLAIN, true, 'True' ],
 			'plain, false' => [ BooleanFormatter::FORMAT_PLAIN, false, 'False' ],
@@ -71,7 +71,7 @@ class BooleanFormatterTest extends TestCase {
 		$this->assertSame( $expectedText, $formatter->format( new BooleanValue( $rawValue ) ) );
 	}
 
-	public function glyphFormatProvider(): array {
+	public static function glyphFormatProvider(): array {
 		return [
 			'html, true' => [ BooleanFormatter::FORMAT_HTML, true, "\u{2713} True" ],
 			'html, false' => [ BooleanFormatter::FORMAT_HTML, false, "\u{2717} False" ],
@@ -111,7 +111,7 @@ class BooleanFormatterTest extends TestCase {
 		$this->assertStringContainsString( '&amp;', $result );
 	}
 
-	public function htmlEscapedFormatProvider(): array {
+	public static function htmlEscapedFormatProvider(): array {
 		return [
 			'html' => [ BooleanFormatter::FORMAT_HTML ],
 			'html widget' => [ BooleanFormatter::FORMAT_HTML_WIDGET ],
