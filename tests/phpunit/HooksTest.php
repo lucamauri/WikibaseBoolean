@@ -4,47 +4,43 @@ declare( strict_types = 1 );
 
 namespace MediaWiki\Extension\WikibaseBoolean\Tests;
 
+use MediaWiki\Extension\WikibaseBoolean\Hooks;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MediaWiki\Extension\WikibaseBoolean\Hooks
  *
- * Same environment caveat as BooleanRdfMapperTest: Hooks implements
- * Wikibase\Repo\Hooks\WikibaseRepoDataTypesHook, which is only
- * autoloadable inside a MediaWiki + Wikibase installation.
+ * FIXED (2026-09-18): this suite previously skip-guarded on
+ * `interface_exists( 'Wikibase\Repo\Hooks\WikibaseRepoDataTypesHook' )`,
+ * on the assumption that interface was only unavailable outside a real
+ * MediaWiki + Wikibase installation. Confirmed directly on a live
+ * DataTrek install (see Hooks.php's own docblock for the exact commands)
+ * that the interface doesn't exist there either -- it doesn't exist
+ * anywhere, full stop, because Hooks no longer implements it and no such
+ * interface exists in the installed Wikibase version at all. That also
+ * means the previous `testImplementsWikibaseRepoDataTypesHook()` test
+ * had never once actually run, anywhere, in any environment -- it always
+ * hit the skip guard, including inside real Wikibase, since the
+ * interface it checked for was never there to begin with. It's removed
+ * below rather than fixed, since there is no interface left to assert
+ * against.
  *
- * Once implemented, the meaningful test here is behavioural: call
- * onWikibaseRepoDataTypes() with a sample $dataTypeDefinitions array and
- * assert 'PT:boolean' is merged in without disturbing existing keys --
- * not just an instanceof check.
+ * With the interface reference gone from Hooks.php, this class has no
+ * dependency on anything Wikibase- or MediaWiki-specific at all --
+ * `onWikibaseRepoDataTypes()` only ever touches WikibaseBoolean's own
+ * classes and the standalone-installable `DataValues\BooleanValue`. So
+ * unlike BooleanRdfMapperTest (which genuinely still needs a live
+ * Wikibase install for `ValueSnakRdfBuilder`/`PropertyValueSnak`), this
+ * suite now runs for real under plain `composer test` -- no skip guard
+ * needed at all. See phpunit.xml.dist's own header comment, updated to
+ * match.
  *
  * @license GPL-2.0-or-later
  */
 class HooksTest extends TestCase {
 
-	protected function setUp(): void {
-		parent::setUp();
-
-		if ( !interface_exists( 'Wikibase\Repo\Hooks\WikibaseRepoDataTypesHook' ) ) {
-			$this->markTestSkipped(
-				'Wikibase\Repo\Hooks\WikibaseRepoDataTypesHook is not autoloadable in ' .
-				'this environment. Run this test suite from within a MediaWiki + ' .
-				'Wikibase installation instead of standalone Composer/PHPUnit.'
-			);
-		}
-	}
-
-	public function testImplementsWikibaseRepoDataTypesHook(): void {
-		$hooks = new \MediaWiki\Extension\WikibaseBoolean\Hooks();
-
-		$this->assertInstanceOf(
-			\Wikibase\Repo\Hooks\WikibaseRepoDataTypesHook::class,
-			$hooks
-		);
-	}
-
 	public function testMergesBooleanDataTypeWithoutDisturbingExistingEntries(): void {
-		$hooks = new \MediaWiki\Extension\WikibaseBoolean\Hooks();
+		$hooks = new Hooks();
 
 		$dataTypeDefinitions = [
 			'PT:string' => [ 'value-type' => 'string' ],

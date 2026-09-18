@@ -4,13 +4,28 @@ declare( strict_types = 1 );
 
 namespace MediaWiki\Extension\WikibaseBoolean\Formatters;
 
-use DataValues\BooleanValue;
+use DataValues\StringValue;
 use InvalidArgumentException;
+use MediaWiki\Extension\WikibaseBoolean\BooleanStrings;
 use ValueFormatters\FormatterOptions;
 use ValueFormatters\ValueFormatter;
 
 /**
- * Formats a DataValues\BooleanValue for display.
+ * Formats a DataValues\StringValue -- holding exactly BooleanStrings::TRUE
+ * or BooleanStrings::FALSE -- for display.
+ *
+ * SUPERSEDED (2026-09-18): this class used to format a native
+ * DataValues\BooleanValue and branch on its real PHP bool via
+ * `$value->getValue()` truthiness directly. See
+ * manuals/adr/0006-boolean-as-string-value-type.md for why the underlying
+ * value is now a StringValue instead -- in short, a real Wikibase-core
+ * bug meant a BooleanValue could never survive being edited through the
+ * UI at all, so this switch is a correctness fix, not a style change.
+ * The only change this class needed: comparing `$value->getValue() ===
+ * BooleanStrings::TRUE` explicitly, rather than relying on the value
+ * already being a real bool. Everything else below -- which formats get
+ * the glyph, which get HTML-escaped, the message-lookup abstraction -- is
+ * unaffected and unchanged.
  *
  * Wikibase invokes a fresh instance of this class (via
  * WikibaseBoolean.datatypes.php's 'formatter-factory-callback') once per
@@ -52,20 +67,19 @@ class BooleanFormatter implements ValueFormatter {
 	 * own Wikibase\Lib\Formatters\SnakFormatter interface, which is not a
 	 * Composer-installable package -- it lives inside the Wikibase
 	 * MediaWiki extension itself, the same reason BooleanRdfMapper and
-	 * Hooks can't be loaded outside a real MediaWiki+Wikibase install (see
-	 * their own docblocks). BooleanFormatter therefore cannot reference
+	 * Hooks historically couldn't be loaded outside a real MediaWiki+
+	 * Wikibase install. BooleanFormatter therefore cannot reference
 	 * SnakFormatter::FORMAT_HTML etc. at compile time; it defines its own
 	 * copies of the same string literals instead, matching Wikibase's
 	 * documented convention.
 	 *
 	 * STILL NOT CONFIRMED against the installed Wikibase version's actual
-	 * Wikibase\Lib\Formatters\SnakFormatter source this session -- these
-	 * string values are reconstructed from established Wikibase
-	 * convention, not read from a file this session. Given that the
-	 * FORMAT_PLAIN/FORMAT_HTML assumption above was already wrong once,
-	 * this is a good candidate to verify next time you're in the vendored
-	 * Wikibase source: `cat` the real SnakFormatter.php and compare its
-	 * constants against the five below.
+	 * Wikibase\Lib\Formatters\SnakFormatter source -- these string values
+	 * are reconstructed from established Wikibase convention, not read
+	 * from a file. Given that the FORMAT_PLAIN/FORMAT_HTML assumption
+	 * above was already wrong once, this is a good candidate to verify
+	 * next time you're in the vendored Wikibase source: `cat` the real
+	 * SnakFormatter.php and compare its constants against the five below.
 	 */
 	public const FORMAT_PLAIN = 'text/plain';
 	public const FORMAT_WIKI = 'text/x-wiki';
@@ -81,8 +95,7 @@ class BooleanFormatter implements ValueFormatter {
 	 * already uses background color to mark added/removed statement
 	 * values, and layering a second glyph/color convention on top of that
 	 * risks visually fighting the diff chrome rather than clarifying it
-	 * (see prior discussion -- this was an explicit scoping decision, not
-	 * an oversight).
+	 * (an explicit scoping decision, not an oversight).
 	 */
 	private const GLYPH_FORMATS = [
 		self::FORMAT_HTML,
@@ -131,27 +144,33 @@ class BooleanFormatter implements ValueFormatter {
 	/**
 	 * @inheritDoc
 	 *
-	 * @param BooleanValue $value
+	 * @param StringValue $value Holding, in the normal case, exactly
+	 *   BooleanStrings::TRUE or BooleanStrings::FALSE. Anything else that
+	 *   happens to be a StringValue is treated as false rather than
+	 *   throwing -- BooleanValidator is what actually enforces this
+	 *   invariant; this class's job is display, not validation, so it
+	 *   degrades gracefully instead of erroring on data that slipped past
+	 *   validation some other way.
 	 *
 	 * @return string The formatted representation of $value: localized
 	 *   "True"/"False" text (see wikibaseboolean-value-true/-false in
 	 *   i18n/en.json), optionally glyph-prefixed and/or HTML-escaped
 	 *   depending on $this->format -- see GLYPH_FORMATS and HTML_FORMATS.
 	 *
-	 * @throws InvalidArgumentException If $value is not a BooleanValue.
-	 *   Wikibase's own formatter dispatch is expected to only ever hand
-	 *   PT:boolean snaks to this class, so this is a defensive guard
+	 * @throws InvalidArgumentException If $value is not a StringValue at
+	 *   all. Wikibase's own formatter dispatch is expected to only ever
+	 *   hand PT:boolean snaks to this class, so this is a defensive guard
 	 *   against a mismatched registration, not an expected runtime path.
 	 */
 	public function format( $value ) {
-		if ( !( $value instanceof BooleanValue ) ) {
+		if ( !( $value instanceof StringValue ) ) {
 			throw new InvalidArgumentException(
-				'BooleanFormatter can only format DataValues\BooleanValue instances, got '
+				'BooleanFormatter can only format DataValues\StringValue instances, got '
 					. ( is_object( $value ) ? get_class( $value ) : gettype( $value ) ) . '.'
 			);
 		}
 
-		$isTrue = $value->getValue();
+		$isTrue = $value->getValue() === BooleanStrings::TRUE;
 		$messageKey = $isTrue ? 'wikibaseboolean-value-true' : 'wikibaseboolean-value-false';
 		$text = $this->messageLookup->getText( $messageKey );
 

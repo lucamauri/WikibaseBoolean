@@ -4,7 +4,7 @@ declare( strict_types = 1 );
 
 namespace MediaWiki\Extension\WikibaseBoolean\Tests\Formatters;
 
-use DataValues\BooleanValue;
+use DataValues\StringValue;
 use InvalidArgumentException;
 use MediaWiki\Extension\WikibaseBoolean\Formatters\BooleanFormatter;
 use PHPUnit\Framework\TestCase;
@@ -12,6 +12,14 @@ use ValueFormatters\ValueFormatter;
 
 /**
  * @covers \MediaWiki\Extension\WikibaseBoolean\Formatters\BooleanFormatter
+ *
+ * SUPERSEDED (2026-09-18): constructed DataValues\BooleanValue before
+ * this session's fix -- see BooleanFormatter's own docblock and
+ * manuals/adr/0006-boolean-as-string-value-type.md. newTrueOrFalse()
+ * below is the one place this suite converts a readable bool into the
+ * actual StringValue shape BooleanFormatter now expects, so every
+ * existing test case keeps its original, readable `true`/`false` data
+ * provider values.
  *
  * Only depends on data-values/* and this extension's own
  * BooleanMessageLookup abstraction (via FakeBooleanMessageLookup) -- no
@@ -21,14 +29,15 @@ use ValueFormatters\ValueFormatter;
  * Uses BooleanFormatter::FORMAT_PLAIN/FORMAT_WIKI/FORMAT_HTML/etc.
  * throughout, not ValueFormatters\ValueFormatter's constants -- that
  * interface declares no format constants (confirmed against the installed
- * data-values/interfaces 1.2.0 source; it declares only OPT_LANG). An
- * earlier version of this file assumed otherwise and failed at runtime
- * with "Undefined constant" errors -- see BooleanFormatter's own docblock
- * for the full correction.
+ * data-values/interfaces 1.2.0 source; it declares only OPT_LANG).
  *
  * @license GPL-2.0-or-later
  */
 class BooleanFormatterTest extends TestCase {
+
+	private static function newTrueOrFalse( bool $value ): StringValue {
+		return new StringValue( $value ? 'true' : 'false' );
+	}
 
 	public function testImplementsValueFormatter(): void {
 		$formatter = new BooleanFormatter( BooleanFormatter::FORMAT_PLAIN, new FakeBooleanMessageLookup() );
@@ -46,7 +55,7 @@ class BooleanFormatterTest extends TestCase {
 	): void {
 		$formatter = new BooleanFormatter( $format, new FakeBooleanMessageLookup() );
 
-		$this->assertSame( $expectedText, $formatter->format( new BooleanValue( $rawValue ) ) );
+		$this->assertSame( $expectedText, $formatter->format( self::newTrueOrFalse( $rawValue ) ) );
 	}
 
 	public static function plainAndWikiFormatProvider(): array {
@@ -68,7 +77,7 @@ class BooleanFormatterTest extends TestCase {
 	): void {
 		$formatter = new BooleanFormatter( $format, new FakeBooleanMessageLookup() );
 
-		$this->assertSame( $expectedText, $formatter->format( new BooleanValue( $rawValue ) ) );
+		$this->assertSame( $expectedText, $formatter->format( self::newTrueOrFalse( $rawValue ) ) );
 	}
 
 	public static function glyphFormatProvider(): array {
@@ -85,7 +94,7 @@ class BooleanFormatterTest extends TestCase {
 
 		// No glyph prefix here -- see BooleanFormatter::GLYPH_FORMATS'
 		// docblock for why FORMAT_HTML_DIFF is deliberately excluded.
-		$this->assertSame( 'True', $formatter->format( new BooleanValue( true ) ) );
+		$this->assertSame( 'True', $formatter->format( self::newTrueOrFalse( true ) ) );
 	}
 
 	/**
@@ -103,7 +112,7 @@ class BooleanFormatterTest extends TestCase {
 		] );
 		$formatter = new BooleanFormatter( $format, $messageLookup );
 
-		$result = $formatter->format( new BooleanValue( true ) );
+		$result = $formatter->format( self::newTrueOrFalse( true ) );
 
 		$this->assertStringNotContainsString( '<b>', $result );
 		$this->assertStringContainsString( '&lt;b&gt;', $result );
@@ -129,15 +138,28 @@ class BooleanFormatterTest extends TestCase {
 		] );
 		$formatter = new BooleanFormatter( BooleanFormatter::FORMAT_PLAIN, $messageLookup );
 
-		$this->assertSame( 'A & B', $formatter->format( new BooleanValue( true ) ) );
+		$this->assertSame( 'A & B', $formatter->format( self::newTrueOrFalse( true ) ) );
 	}
 
-	public function testRejectsNonBooleanValueInput(): void {
+	/**
+	 * Confirms BooleanFormatter degrades to "false" display rather than
+	 * throwing when handed a StringValue that isn't exactly "true" -- see
+	 * BooleanFormatter::format()'s own docblock for why this class treats
+	 * that as BooleanValidator's job, not its own, and normalizes instead
+	 * of erroring.
+	 */
+	public function testTreatsAnyNonTrueStringAsFalse(): void {
+		$formatter = new BooleanFormatter( BooleanFormatter::FORMAT_PLAIN, new FakeBooleanMessageLookup() );
+
+		$this->assertSame( 'False', $formatter->format( new StringValue( 'not-a-valid-boolean-string' ) ) );
+	}
+
+	public function testRejectsNonStringValueInput(): void {
 		$formatter = new BooleanFormatter( BooleanFormatter::FORMAT_PLAIN, new FakeBooleanMessageLookup() );
 
 		$this->expectException( InvalidArgumentException::class );
 
-		$formatter->format( 'not a BooleanValue' );
+		$formatter->format( 'not a StringValue' );
 	}
 
 }

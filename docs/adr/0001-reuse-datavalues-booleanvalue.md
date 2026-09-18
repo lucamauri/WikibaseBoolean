@@ -4,7 +4,7 @@ Date: 2026-09-02
 
 ## Status
 
-**accepted**
+**superseded by [ADR-0006](0006-boolean-as-string-value-type.md)**
 
 ## Context
 
@@ -45,3 +45,21 @@ RDF-mapper callback operates on `DataValues\BooleanValue` instances.
   attached to the value object itself. If a future requirement needs
   that, it should be handled by a new ADR that explicitly supersedes
   this one, not by quietly wrapping `BooleanValue` later.
+
+## Superseded (2026-09-18)
+
+The first live exercise of the checkbox widget this decision fed into
+turned up a real, fully-traced bug in Wikibase core itself: a
+`DataValues\BooleanValue`'s raw PHP boolean could never survive the
+client-side value-parsing round trip (`wikibase.api.ParseValueCaller`'s
+truthy check on the API response, colliding with MediaWiki's own legacy
+JSON rendering of raw booleans), so Save stayed disabled forever, for
+both true and false. This was not a flaw in the reasoning above -- reuse
+an existing, stable upstream `DataValue` class rather than writing a new
+one -- so much as the *specific* class this ADR picked turning out to
+collide with a bug nothing here could have detected without actually
+running the extension live. [ADR-0006](0006-boolean-as-string-value-type.md)
+keeps this ADR's underlying principle (reuse upstream, don't write a
+custom `DataValue` class) and simply reuses a different upstream class --
+`DataValues\StringValue` -- instead. See ADR-0006 for the full trace and
+reasoning.

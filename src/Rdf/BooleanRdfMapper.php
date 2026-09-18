@@ -4,7 +4,8 @@ declare( strict_types = 1 );
 
 namespace MediaWiki\Extension\WikibaseBoolean\Rdf;
 
-use DataValues\BooleanValue;
+use DataValues\StringValue;
+use MediaWiki\Extension\WikibaseBoolean\BooleanStrings;
 use Wikibase\DataModel\Snak\PropertyValueSnak;
 use Wikibase\Repo\Rdf\ValueSnakRdfBuilder;
 use Wikimedia\Purtle\RdfWriter;
@@ -13,48 +14,46 @@ use Wikimedia\Purtle\RdfWriter;
  * Maps a boolean-valued snak to RDF for the Wikibase Query Service (and any
  * other RDF export), as xsd:boolean.
  *
- * CONFIRMED (2026-09-16) against the installed Wikibase source
- * (extensions/Wikibase/repo/includes/Rdf/ValueSnakRdfBuilder.php and two
- * real implementations, MonolingualTextRdfBuilder and QuantityRdfBuilder,
- * both under .../Rdf/Values/). Two corrections to this class's earlier
- * scaffold, both real bugs that would have been fatal signature mismatches
- * or silently-wrong RDF, not style choices:
+ * SUPERSEDED (2026-09-18): this class used to read a native
+ * DataValues\BooleanValue and branch on `$value->getValue()` truthiness
+ * directly (`$value->getValue() ? 'true' : 'false'`). See
+ * manuals/adr/0006-boolean-as-string-value-type.md for why the underlying
+ * value is now a DataValues\StringValue instead -- in short, a real
+ * Wikibase-core bug meant a BooleanValue could never survive being edited
+ * through the UI at all.
  *
- *   - addValue() takes SIX parameters, not five. The scaffold was missing
- *     $snakNamespace, which sits between $dataType and $snak. Getting this
- *     wrong wouldn't have been a subtle bug -- PHP would fatal on
- *     "Declaration must be compatible with
- *     ValueSnakRdfBuilder::addValue()" the moment Wikibase tried to use
- *     this class.
- *   - The interface itself declares no type hints on the string
- *     parameters (or a return type). Both real implementations checked
- *     leave them untyped too, rather than adding stricter hints -- adding
- *     e.g. `string $dataType` here would actually be a fatal LSP
- *     violation (narrowing an implicitly-mixed parameter), not just an
- *     inconsistency, so this class deliberately matches the interface's
- *     own looseness on those four parameters instead of over-typing them.
+ * That switch reintroduces, in PHP, the exact shape of bug the ADR is
+ * about in JS: `$value->getValue()` is now a STRING, and in PHP, just as
+ * in JS, any non-empty string is truthy -- including the string "false".
+ * `$value->getValue() ? 'true' : 'false'` would therefore emit the
+ * literal RDF "true" for every stored value, including ones that say
+ * "false", which would have been a silent, serious correctness bug in
+ * exactly the code this class's original docblock was written to guard
+ * against. This version compares the string by exact equality instead
+ * (`$rawValue === BooleanStrings::TRUE`), which is immune to that: it
+ * only ever emits "true" for the literal string "true", and normalizes
+ * anything else -- "false" included, but also any unexpected value that
+ * shouldn't be reachable if BooleanValidator has done its job -- to
+ * "false", rather than trusting truthiness or throwing mid-RDF-export.
  *
- * $dataType and $snakNamespace are accepted but unused below -- the same
- * pattern MonolingualTextRdfBuilder uses for a single fixed-shape literal
- * value with no unit/normalization/complex-value node of its own. Compare
- * QuantityRdfBuilder, which *does* use $snakNamespace, but only because it
- * writes an auxiliary "value node" for bounds/unit/normalization -- boolean
- * has nothing equivalent to attach.
+ * CRITICAL correctness note, carried over unchanged from the original
+ * scaffold and still the reason this class exists at all: PHP's (string)
+ * cast of a bool does NOT produce a valid xsd:boolean lexical form --
+ * `(string) true` is "1", not "true". This class was never at risk of
+ * that particular mistake (it never relies on an implicit cast either
+ * before or after this session's change), but it's the reason explicit
+ * literal strings, not casts, are used throughout.
  *
- * CRITICAL correctness note, carried over from the original scaffold and
- * still the reason this class exists: PHP's (string) cast of a bool does
- * NOT produce a valid xsd:boolean lexical form -- `(string) true` is "1",
- * not "true". xsd:boolean's valid lexical values are "true"/"false" (or
- * "1"/"0", but mixing the two conventions silently breaks SPARQL value
- * comparisons downstream in the Query Service). This class maps true/false
- * to the literal strings 'true'/'false' explicitly, via a ternary, never
- * an implicit cast.
+ * CONFIRMED (2026-09-16, carried over, unaffected by this session's
+ * change) against the installed Wikibase source: addValue() takes SIX
+ * parameters, including the un-typed $dataType and $snakNamespace, which
+ * are accepted but unused -- see the previous version of this docblock
+ * for the full signature-verification story if needed; nothing about
+ * that changed here.
  *
- * Still deliberately unresolved (see CONTEXT.md's open questions and the
- * WikibaseBoolean.datatypes.php header comment): whether to also register
- * a custom 'rdf-type-uri' for PT:boolean, or accept whatever URI
- * Wikibase's RdfVocabulary auto-generates. Nothing below touches that --
- * it's a separate registration concern, not part of addValue() itself.
+ * Still deliberately unresolved (see CONTEXT.md's open questions):
+ * whether to also register a custom 'rdf-type-uri' for PT:boolean, or
+ * accept whatever URI Wikibase's RdfVocabulary auto-generates.
  *
  * @license GPL-2.0-or-later
  */
@@ -80,8 +79,9 @@ class BooleanRdfMapper implements ValueSnakRdfBuilder {
 	 *   subject, used by other builders (see QuantityRdfBuilder) to
 	 *   attach an auxiliary value node. Unused here: boolean has nothing
 	 *   to attach.
-	 * @param PropertyValueSnak $snak The snak whose DataValues\BooleanValue
-	 *   is to be written.
+	 * @param PropertyValueSnak $snak The snak whose DataValues\StringValue
+	 *   -- holding exactly BooleanStrings::TRUE or BooleanStrings::FALSE
+	 *   in the normal case -- is to be written.
 	 */
 	public function addValue(
 		RdfWriter $writer,
@@ -91,14 +91,16 @@ class BooleanRdfMapper implements ValueSnakRdfBuilder {
 		$snakNamespace,
 		PropertyValueSnak $snak
 	) {
-		/** @var BooleanValue $value */
+		/** @var StringValue $value */
 		$value = $snak->getDataValue();
-		'@phan-var BooleanValue $value';
+		'@phan-var StringValue $value';
 
-		// Explicit literal strings, never an implicit (string) cast --
-		// see this class's docblock for why that distinction matters for
-		// xsd:boolean specifically.
-		$lexicalValue = $value->getValue() ? 'true' : 'false';
+		// Exact string equality, never truthiness -- see this class's
+		// docblock for why relying on truthiness here would silently
+		// mis-report every "false" value as "true".
+		$lexicalValue = $value->getValue() === BooleanStrings::TRUE
+			? BooleanStrings::TRUE
+			: BooleanStrings::FALSE;
 
 		$writer->say( $propertyValueNamespace, $propertyValueLName )
 			->value( $lexicalValue, 'xsd', 'boolean' );

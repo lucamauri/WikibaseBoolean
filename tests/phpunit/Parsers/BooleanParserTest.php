@@ -4,7 +4,7 @@ declare( strict_types = 1 );
 
 namespace MediaWiki\Extension\WikibaseBoolean\Tests\Parsers;
 
-use DataValues\BooleanValue;
+use DataValues\StringValue;
 use MediaWiki\Extension\WikibaseBoolean\Parsers\BooleanParser;
 use PHPUnit\Framework\TestCase;
 use ValueParsers\ParseException;
@@ -13,10 +13,17 @@ use ValueParsers\ValueParser;
 /**
  * @covers \MediaWiki\Extension\WikibaseBoolean\Parsers\BooleanParser
  *
+ * SUPERSEDED (2026-09-18): asserted BooleanValue::class / native bool
+ * getValue() before this session's fix -- see BooleanParser's own
+ * docblock and manuals/adr/0006-boolean-as-string-value-type.md for why
+ * the output shape changed. The ACCEPTED INPUT vocabulary this suite
+ * exercises is completely unchanged; only the assertions on the output
+ * shape were updated.
+ *
  * Only depends on data-values/data-values and data-values/interfaces --
- * both standalone Composer packages -- so unlike BooleanRdfMapperTest and
- * HooksTest, this suite is expected to run in a plain `composer test`
- * environment as well as inside MediaWiki.
+ * both standalone Composer packages -- so unlike BooleanRdfMapperTest,
+ * this suite is expected to run in a plain `composer test` environment
+ * as well as inside MediaWiki.
  *
  * @license GPL-2.0-or-later
  */
@@ -32,8 +39,8 @@ class BooleanParserTest extends TestCase {
 	public function testParsesTrueValues( $rawValue ): void {
 		$result = ( new BooleanParser() )->parse( $rawValue );
 
-		$this->assertInstanceOf( BooleanValue::class, $result );
-		$this->assertTrue( $result->getValue() );
+		$this->assertInstanceOf( StringValue::class, $result );
+		$this->assertSame( 'true', $result->getValue() );
 	}
 
 	public static function trueValueProvider(): array {
@@ -55,8 +62,8 @@ class BooleanParserTest extends TestCase {
 	public function testParsesFalseValues( $rawValue ): void {
 		$result = ( new BooleanParser() )->parse( $rawValue );
 
-		$this->assertInstanceOf( BooleanValue::class, $result );
-		$this->assertFalse( $result->getValue() );
+		$this->assertInstanceOf( StringValue::class, $result );
+		$this->assertSame( 'false', $result->getValue() );
 	}
 
 	public static function falseValueProvider(): array {

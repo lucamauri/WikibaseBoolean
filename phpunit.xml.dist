@@ -4,14 +4,17 @@
 	Composer-installable packages (data-values/*) and not on a running
 	MediaWiki/Wikibase service container.
 
-	This currently covers BooleanParser, BooleanFormatter and
-	BooleanValidator's tests. It does NOT cover Hooks or BooleanRdfMapper:
-	Hooks implements a Wikibase-defined hook interface, and BooleanRdfMapper
-	implements Wikibase's ValueSnakRdfBuilder — both interfaces live inside
-	the Wikibase MediaWiki extension itself (not a standalone Composer
-	package), so meaningfully testing them requires running inside an
-	actual MediaWiki + Wikibase installation via MediaWiki core's own
-	tests/phpunit/phpunit.php entry point, not this file. See HANDOFF.md.
+	This currently covers BooleanParser, BooleanFormatter, BooleanValidator,
+	and (as of 2026-09-18, after Hooks.php stopped implementing a Wikibase
+	interface that turned out not to exist — see Hooks.php's own docblock)
+	Hooks. It does NOT cover BooleanRdfMapper: BooleanRdfMapper implements
+	Wikibase's ValueSnakRdfBuilder, and its test constructs real
+	Wikibase\DataModel\Snak\PropertyValueSnak / PropertyId objects — both
+	interfaces/classes live inside the Wikibase MediaWiki extension itself
+	(not a standalone Composer package), so meaningfully testing them
+	requires running inside an actual MediaWiki + Wikibase installation via
+	MediaWiki core's own tests/phpunit/phpunit.php entry point, not this
+	file. See HANDOFF.md.
 -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"

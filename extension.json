@@ -32,5 +32,23 @@
 			"i18n"
 		]
 	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "resources",
+		"remoteExtPath": "WikibaseBoolean/resources"
+	},
+	"ResourceModules": {
+		"jquery.valueview.experts.Boolean": {
+			"scripts": [
+				"experts/Boolean.js"
+			],
+			"dependencies": [
+				"jquery.valueview.Expert"
+			],
+			"targets": [
+				"desktop",
+				"mobile"
+			]
+		}
+	},
 	"manifest_version": 2
 }
