@@ -7,7 +7,7 @@ namespace MediaWiki\Extension\WikibaseBoolean\Tests\Rdf;
 use DataValues\StringValue;
 use MediaWiki\Extension\WikibaseBoolean\Rdf\BooleanRdfMapper;
 use PHPUnit\Framework\TestCase;
-use Wikibase\DataModel\Entity\PropertyId;
+use Wikibase\DataModel\Entity\NumericPropertyId;
 use Wikibase\DataModel\Snak\PropertyValueSnak;
 use Wikibase\Repo\Rdf\ValueSnakRdfBuilder;
 use Wikimedia\Purtle\RdfWriter;
