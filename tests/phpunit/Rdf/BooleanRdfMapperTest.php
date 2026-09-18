@@ -79,7 +79,7 @@ class BooleanRdfMapperTest extends TestCase {
 			->with( $expectedLexicalValue, 'xsd', 'boolean' )
 			->willReturnSelf();
 
-		$snak = new PropertyValueSnak( new PropertyId( 'P1' ), new StringValue( $rawValue ) );
+		$snak = new PropertyValueSnak( new NumericPropertyId( 'P1' ), new StringValue( $rawValue ) );
 
 		( new BooleanRdfMapper() )->addValue( $writer, 'wdt', 'P1', 'boolean', 'wdv', $snak );
 	}
