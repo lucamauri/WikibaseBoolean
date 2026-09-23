@@ -7,5 +7,7 @@
     "wikibaseboolean-desc": "Aggiunge a Wikibase un tipo di dato Booleano nativo a 2 stati, per installazioni standalone di Wikibase",
     "wikibaseboolean-datatype-label": "Booleano",
     "wikibaseboolean-value-true": "Vero",
-    "wikibaseboolean-value-false": "Falso"
+    "wikibaseboolean-value-false": "Falso",
+    "wikibase-validator-wikibaseboolean-not-a-string-value": "Questo valore non è un Booleano valido.",
+    "wikibase-validator-wikibaseboolean-not-true-or-false": "Un valore Booleano deve essere vero oppure falso."
 }

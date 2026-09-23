@@ -21,3 +21,4 @@ Context, Decision, Consequences).
 - [0004 -- `BooleanMessageLookup` abstraction instead of calling `wfMessage()` directly](0004-BooleanMessageLookup-abstraction.md)
 - [0005 -- Expert module named `jquery.valueview.experts.Boolean`, not extension-prefixed](0005-expert-module-naming.md)
 - [0006 -- Store the boolean value as `DataValues\StringValue`, not `DataValues\BooleanValue`](0006-boolean-as-string-value-type.md)
+- [0007 -- Target standalone Wikibase installs, not Wikidata](0007-target-standalone-not-wikidata.md)

@@ -1,1 +1,750 @@
-Forged with logic 🖖🏻 at <a href="https://wikitrek.org">Wikitrek</a>, shared freely with the Galaxy
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WikibaseBoolean</title>
+    <meta name="description" content="A native, true 2-state Boolean datatype for standalone Wikibase installations.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0d1117;
+            --bg-card: #161b22;
+            --bg-subtle: #1c2330;
+            --border: #2d3748;
+            --border-hi: #3d4f6b;
+            --text: #e6edf3;
+            --muted: #7d8590;
+            --accent: #58a6ff;
+            --accent-dim: #1f3a5f;
+            --green: #3fb950;
+            --green-dim: #1a3625;
+            --amber: #d29922;
+            --mono: 'IBM Plex Mono', monospace;
+            --sans: 'IBM Plex Sans', sans-serif;
+            --radius: 6px;
+            --radius-lg: 10px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            line-height: 1.65;
+            min-height: 100vh;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code,
+        .mono {
+            font-family: var(--mono);
+            font-size: 0.875em;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1px 6px;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        nav {
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            background: rgba(13, 17, 23, 0.92);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+
+        nav .inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .nav-brand:hover {
+            text-decoration: none;
+        }
+
+        .nav-brand .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            flex-shrink: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            font-size: 0.875rem;
+            transition: color .15s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav-links .btn-gh {
+            border: 1px solid var(--border-hi);
+            border-radius: var(--radius);
+            padding: 5px 14px;
+            color: var(--text);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: border-color .15s, background .15s;
+        }
+
+        .nav-links .btn-gh:hover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+            text-decoration: none;
+        }
+
+        .hero {
+            padding: 5rem 0 4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero-eyebrow {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--accent);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 300;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.25rem;
+            color: var(--text);
+        }
+
+        .hero h1 strong {
+            font-weight: 500;
+        }
+
+        .hero-lead {
+            font-size: 1.1rem;
+            color: var(--muted);
+            max-width: 600px;
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #0d1117;
+            border: none;
+            border-radius: var(--radius);
+            padding: 10px 22px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: var(--sans);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity .15s;
+        }
+
+        .btn-primary:hover {
+            opacity: .85;
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            border: 1px solid var(--border-hi);
+            color: var(--text);
+            border-radius: var(--radius);
+            padding: 10px 22px;
+            font-size: 0.9rem;
+            font-family: var(--sans);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: border-color .15s, background .15s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+            text-decoration: none;
+        }
+
+        .quickstart {
+            margin: 2.5rem 0 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+        }
+
+        .quickstart-label {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            margin-bottom: .75rem;
+        }
+
+        .quickstart pre {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: var(--text);
+            line-height: 2;
+            overflow-x: auto;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .quickstart pre .cmd {
+            color: var(--accent);
+        }
+
+        .quickstart pre .cmt {
+            color: var(--muted);
+        }
+
+        section {
+            padding: 4rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        .section-label {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            margin-bottom: 1rem;
+        }
+
+        section h2 {
+            font-size: 1.6rem;
+            font-weight: 400;
+            margin-bottom: .75rem;
+            color: var(--text);
+        }
+
+        section .lead {
+            color: var(--muted);
+            max-width: 560px;
+            margin-bottom: 2.5rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .service-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            transition: background .15s;
+        }
+
+        .service-card:hover {
+            background: var(--bg-subtle);
+        }
+
+        .service-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .service-card h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: .4rem;
+            color: var(--text);
+        }
+
+        .service-card .image-name {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-bottom: .6rem;
+        }
+
+        .service-card p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .arch-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 2;
+            overflow-x: auto;
+        }
+
+        .arch-box .hl {
+            color: var(--text);
+        }
+
+        .arch-box .ac {
+            color: var(--accent);
+        }
+
+        .arch-box .gr {
+            color: var(--green);
+        }
+
+        .arch-note {
+            margin-top: 1rem;
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .req-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: .75rem;
+        }
+
+        .req-list li {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: .75rem 1rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: flex-start;
+            gap: .6rem;
+        }
+
+        .req-list li::before {
+            content: '—';
+            color: var(--accent);
+            font-family: var(--mono);
+            flex-shrink: 0;
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: .75rem;
+        }
+
+        .doc-link {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: .3rem;
+            transition: border-color .15s, background .15s;
+            text-decoration: none;
+        }
+
+        .doc-link:hover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+            text-decoration: none;
+        }
+
+        .doc-link .doc-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .doc-link .doc-desc {
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        footer {
+            padding: 2.5rem 0;
+            border-top: 1px solid var(--border);
+        }
+
+        footer .inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        footer p {
+            font-size: 0.825rem;
+            color: var(--muted);
+        }
+
+        footer a {
+            color: var(--muted);
+        }
+
+        footer a:hover {
+            color: var(--accent);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-family: var(--mono);
+        }
+
+        .badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        @media (max-width: 600px) {
+            .nav-links a:not(.btn-gh) {
+                display: none;
+            }
+
+            .hero {
+                padding: 3rem 0 2.5rem;
+            }
+
+            .arch-box {
+                font-size: 0.7rem;
+                padding: 1.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="inner">
+            <a class="nav-brand" href="#">
+                <span class="dot"></span>
+                WikibaseBoolean
+            </a>
+            <div class="nav-links">
+                <a href="#components">Components</a>
+                <a href="#architecture">Architecture</a>
+                <a href="#docs">Docs</a>
+                <a class="btn-gh" href="https://github.com/lucamauri/WikibaseBoolean">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <div class="hero">
+                <p class="hero-eyebrow">MediaWiki Extension · Wikibase · GPL v2</p>
+                <h1>A native <strong>2-state Boolean</strong><br>for self-hosted Wikibase</h1>
+                <p class="hero-lead">
+                    WikibaseBoolean adds a genuine true/false datatype to standalone Wikibase
+                    installations that don't need Wikidata's item-based workaround —
+                    a checkbox where you'd otherwise juggle two items, a query pattern,
+                    and a pair of labels for every single flag.
+                </p>
+                <div class="hero-actions">
+                    <a class="btn-primary" href="https://github.com/lucamauri/WikibaseBoolean">
+                        View on GitHub →
+                    </a>
+                    <a class="btn-secondary" href="https://github.com/lucamauri/WikibaseBoolean/blob/main/README.md">
+                        Read the docs
+                    </a>
+                </div>
+
+                <div class="quickstart">
+                    <p class="quickstart-label">Quick start</p>
+                    <pre><span class="cmt"># From your MediaWiki extensions/ directory</span>
+<span class="cmd">git clone</span> https://github.com/lucamauri/WikibaseBoolean
+
+<span class="cmt"># Enable it (after Wikibase Repository)</span>
+echo 'wfLoadExtension( "WikibaseBoolean" );' >> LocalSettings.php
+<span class="cmt"># Composer-based install: see the README</span></pre>
+                </div>
+            </div>
+
+            <section id="components">
+                <p class="section-label">What's included</p>
+                <h2>Five focused components</h2>
+                <p class="lead">Each piece does exactly one job in the parse → validate →
+                    store → display/export pipeline. Nothing here tries to do more than
+                    its name says.</p>
+
+                <div class="services-grid">
+
+                    <div class="service-card">
+                        <div class="service-icon" style="border-color:#1f3a5f; color:var(--accent)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" aria-hidden="true">
+                                <rect x="3" y="5" width="18" height="14" rx="2" />
+                                <line x1="7" y1="10" x2="7" y2="10" />
+                                <line x1="11" y1="10" x2="11" y2="10" />
+                                <line x1="7" y1="14" x2="15" y2="14" />
+                            </svg>
+                        </div>
+                        <h3>Parser</h3>
+                        <p class="image-name">BooleanParser</p>
+                        <p>Accepts a checkbox state or typed text (<code>true</code>/<code>yes</code>/<code>1</code>,
+                            <code>false</code>/<code>no</code>/<code>0</code>) and produces the
+                            one canonical stored value.
+                        </p>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon" style="border-color:#1a3625; color:var(--green)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" aria-hidden="true">
+                                <path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5l8-3z" />
+                                <polyline points="9 12 11 14 15 10" />
+                            </svg>
+                        </div>
+                        <h3>Validator</h3>
+                        <p class="image-name">BooleanValidator</p>
+                        <p>Confirms a stored value is genuinely well-formed -- exactly
+                            <code>"true"</code> or <code>"false"</code> -- before it's ever
+                            accepted, whatever wrote it.
+                        </p>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon" style="border-color:#1f3a5f; color:var(--accent)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" aria-hidden="true">
+                                <polyline points="4 7 4 4 20 4 20 7" />
+                                <line x1="9" y1="20" x2="15" y2="20" />
+                                <line x1="12" y1="4" x2="12" y2="20" />
+                            </svg>
+                        </div>
+                        <h3>Formatter</h3>
+                        <p class="image-name">BooleanFormatter</p>
+                        <p>Localized, format-aware display -- plain text, wikitext, or
+                            HTML with a ✓/✗ glyph -- via a message-lookup abstraction.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon" style="border-color:#2d2a1a; color:var(--amber)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" aria-hidden="true">
+                                <circle cx="6" cy="6" r="2.5" />
+                                <circle cx="6" cy="18" r="2.5" />
+                                <circle cx="18" cy="12" r="2.5" />
+                                <path d="M8 7l8 4M8 17l8-4" />
+                            </svg>
+                        </div>
+                        <h3>RDF mapper</h3>
+                        <p class="image-name">BooleanRdfMapper</p>
+                        <p>Exports to a plain <code>xsd:boolean</code> literal for the
+                            Wikibase Query Service, by exact string equality -- never
+                            truthiness.</p>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-icon" style="border-color:#2d3748; color:var(--muted)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" aria-hidden="true">
+                                <rect x="4" y="4" width="16" height="16" rx="3" />
+                                <polyline points="8 12 11 15 16 9" />
+                            </svg>
+                        </div>
+                        <h3>Edit widget</h3>
+                        <p class="image-name">jquery.valueview.experts.Boolean</p>
+                        <p>A checkbox right in the statement editor, instead of a raw
+                            text field for something with exactly two valid values.</p>
+                    </div>
+
+                </div>
+            </section>
+
+            <section id="architecture">
+                <p class="section-label">How it fits together</p>
+                <h2>Architecture overview</h2>
+                <p class="lead">One value flows through validation once, then branches
+                    into whichever direction it's needed: shown to a person, or
+                    exported as RDF.</p>
+
+                <div class="arch-box">
+                    <span>User input</span>&nbsp;&nbsp;<span>checkbox, or typed text</span><br>
+                    &nbsp;&nbsp;│<br>
+                    &nbsp;&nbsp;▼<br>
+                    <span class="hl">BooleanParser</span>&nbsp;&nbsp;<span>→ StringValue("true" / "false")</span><br>
+                    &nbsp;&nbsp;│<br>
+                    &nbsp;&nbsp;▼<br>
+                    <span class="ac">BooleanValidator</span>&nbsp;&nbsp;<span>confirms exactly "true" or
+                        "false"</span><br>
+                    &nbsp;&nbsp;│<br>
+                    &nbsp;&nbsp;├──► <span class="gr">BooleanFormatter</span>&nbsp;&nbsp;&nbsp;<span>"True" / "False"
+                        (localized)</span><br>
+                    &nbsp;&nbsp;└──► <span
+                        class="gr">BooleanRdfMapper</span>&nbsp;&nbsp;<span>"true"^^xsd:boolean</span>
+                </div>
+                <p class="arch-note">The stored value is a plain <code>DataValues\StringValue</code>,
+                    not a native PHP boolean -- a deliberate fix for a real Wikibase-core bug.
+                    See <a
+                        href="https://github.com/lucamauri/WikibaseBoolean/blob/main/docs/adr/0006-boolean-as-string-value-type.md">ADR-0006</a>
+                    for the full trace.</p>
+            </section>
+
+            <section id="requirements">
+                <p class="section-label">Prerequisites</p>
+                <h2>What you need first</h2>
+                <p class="lead">A small, standard footprint -- nothing beyond what
+                    Wikibase itself already needs.</p>
+                <ul class="req-list">
+                    <li>MediaWiki 1.43 or later</li>
+                    <li>PHP 8.1 or later</li>
+                    <li>The Wikibase Repository extension</li>
+                    <li>Composer (for dependency resolution)</li>
+                </ul>
+            </section>
+
+            <section id="docs">
+                <p class="section-label">Documentation</p>
+                <h2>Guides and references</h2>
+                <p class="lead">Everything below lives in the repository itself --
+                    one source, linked from everywhere else.</p>
+
+                <div class="docs-grid">
+                    <a class="doc-link" href="https://github.com/lucamauri/WikibaseBoolean/blob/main/README.md">
+                        <span class="doc-title">README</span>
+                        <span class="doc-desc">Installation, status, and scope</span>
+                    </a>
+                    <a class="doc-link" href="https://github.com/lucamauri/WikibaseBoolean/tree/main/docs/adr">
+                        <span class="doc-title">Architecture decisions</span>
+                        <span class="doc-desc">ADRs explaining key design choices and trade-offs</span>
+                    </a>
+                    <a class="doc-link"
+                        href="https://github.com/lucamauri/WikibaseBoolean/blob/main/.github/workflows/ci.yml">
+                        <span class="doc-title">Continuous integration</span>
+                        <span class="doc-desc">Runs the full suite against a real, disposable MediaWiki + Wikibase
+                            install</span>
+                    </a>
+                    <a class="doc-link" href="https://github.com/lucamauri/WikibaseBoolean/blob/main/LICENSE">
+                        <span class="doc-title">License</span>
+                        <span class="doc-desc">GPL-2.0-or-later</span>
+                    </a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="inner">
+            <p>
+                <a href="https://github.com/lucamauri/WikibaseBoolean">lucamauri/WikibaseBoolean</a>
+                &nbsp;·&nbsp; GPL v2
+                <br />
+                Forged with logic 🖖🏻 at <a href="https://wikitrek.org">Wikitrek</a>, shared freely with the Galaxy
+            </p>
+            <span class="badge"><span class="dot"></span>v1.0.0</span>
+        </div>
+    </footer>
+
+</body>
+
+</html>

@@ -17,7 +17,7 @@ use Wikimedia\Purtle\RdfWriter;
  * SUPERSEDED (2026-09-18): this class used to read a native
  * DataValues\BooleanValue and branch on `$value->getValue()` truthiness
  * directly (`$value->getValue() ? 'true' : 'false'`). See
- * manuals/adr/0006-boolean-as-string-value-type.md for why the underlying
+ * docs/adr/0006-boolean-as-string-value-type.md for why the underlying
  * value is now a DataValues\StringValue instead -- in short, a real
  * Wikibase-core bug meant a BooleanValue could never survive being edited
  * through the UI at all.

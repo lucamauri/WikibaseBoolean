@@ -18,8 +18,8 @@ use ValueValidators\ValueValidator;
  * SUPERSEDED (2026-09-18): this class's entire original rationale was
  * that there was very little to validate, because a native PHP bool is
  * inherently 2-state -- see
- * manuals/adr/0001-reuse-datavalues-booleanvalue.md (now itself
- * superseded by manuals/adr/0006-boolean-as-string-value-type.md) and
+ * docs/adr/0001-reuse-datavalues-booleanvalue.md (now itself
+ * superseded by docs/adr/0006-boolean-as-string-value-type.md) and
  * this class's own prior docblock. That reasoning held exactly as long as
  * the underlying value really was a DataValues\BooleanValue. It no longer
  * is: WikibaseBoolean now deliberately stores its value as a plain

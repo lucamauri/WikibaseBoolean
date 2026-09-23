@@ -7,5 +7,7 @@
 	"wikibaseboolean-desc": "Adds a native 2-state Boolean datatype to Wikibase, for standalone Wikibase installs",
 	"wikibaseboolean-datatype-label": "Boolean",
 	"wikibaseboolean-value-true": "True",
-	"wikibaseboolean-value-false": "False"
+	"wikibaseboolean-value-false": "False",
+	"wikibase-validator-wikibaseboolean-not-a-string-value": "This value is not a valid Boolean.",
+	"wikibase-validator-wikibaseboolean-not-true-or-false": "A Boolean value must be either true or false."
 }
